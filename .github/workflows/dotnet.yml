@@ -41,7 +41,10 @@ jobs:
           username: root
           key: ${{ secrets.SSH_KEY }}
           script: |
+            docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.TOKEN }}
             docker pull ghcr.io/${{ github.repository }}:latest
-            docker stop app || true
-            docker rm app || true
-            docker run -d --name app -p 8062:8080 ghcr.io/${{ github.repository }}:latest
+            docker stop ${{ github.event.repository.name }} || true
+            docker rm ${{ github.event.repository.name }} || true
+            docker run -d --name ${{ github.event.repository.name }} \
+              -p 8062:8080 \
+              ghcr.io/${{ github.repository }}:latest
