@@ -1,18 +1,14 @@
 name: production
-
 on:
   push:
     branches:
       - main
-
 permissions:
   packages: write
   contents: read
-
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -32,7 +28,6 @@ jobs:
   deploy:
     needs: build-and-push
     runs-on: ubuntu-latest
-
     steps:
       - name: Deploy to VPS
         uses: appleboy/ssh-action@v0.1.9
@@ -40,11 +35,14 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: root
           key: ${{ secrets.SSH_KEY }}
+          envs: APPSETTINGS
           script: |
             docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.TOKEN }}
             docker pull ghcr.io/${{ github.repository }}:latest
             docker stop ${{ github.event.repository.name }} || true
             docker rm ${{ github.event.repository.name }} || true
+            echo '${{ secrets.APPSETTINGS }}' > /tmp/appsettings.json
             docker run -d --name ${{ github.event.repository.name }} \
               -p 8062:8080 \
+              -v /tmp/appsettings.json:/app/appsettings.json \
               ghcr.io/${{ github.repository }}:latest
