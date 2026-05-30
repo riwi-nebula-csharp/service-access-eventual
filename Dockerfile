@@ -1,5 +1,5 @@
 # Etapa 1: Build
-FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /app
 
 # Copiar csproj y restaurar dependencias
@@ -13,7 +13,7 @@ COPY . ./
 RUN dotnet publish -c Release -o /out
 
 # Etapa 2: Runtime
-FROM mcr.microsoft.com/dotnet/aspnet:10.0
+FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
 
 # Copiar desde la etapa build
@@ -23,4 +23,4 @@ COPY --from=build /out .
 EXPOSE 8080
 
 # Comando de inicio
-ENTRYPOINT ["dotnet", "service-access-eventual.dll"]
+ENTRYPOINT ["dotnet", "service_access_eventual.dll"]
