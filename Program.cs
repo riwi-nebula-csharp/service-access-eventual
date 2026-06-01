@@ -19,23 +19,39 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 // JWT
 var jwtSecret = builder.Configuration["Jwt:Secret"]!;
-var jwtIssuer = builder.Configuration["Jwt:Issuer"]!;
+var jwtIssuer  = builder.Configuration["Jwt:Issuer"]!;
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
         options.TokenValidationParameters = new TokenValidationParameters
         {
-            ValidateIssuer = true,
-            ValidateAudience = false,
-            ValidateLifetime = true,
+            ValidateIssuer           = true,
+            ValidateAudience         = false,
+            ValidateLifetime         = true,
             ValidateIssuerSigningKey = true,
-            ValidIssuer = jwtIssuer,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
-            NameClaimType = "sub",
-            RoleClaimType = "role"
+            ValidIssuer              = jwtIssuer,
+            IssuerSigningKey         = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
+            NameClaimType            = "sub",
+            RoleClaimType            = "role"
         };
     });
+
+// CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("FrontendPolicy", policy =>
+    {
+        policy
+            .WithOrigins(
+                "https://access.nebula.andrescortes.dev",
+                "http://127.0.0.1:5505",
+                "http://localhost:5505"
+            )
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
 
 builder.Services.AddAuthorization();
 builder.Services.AddScoped<IScanService, ScanService>();
@@ -43,6 +59,8 @@ builder.Services.AddControllers();
 
 var app = builder.Build();
 
+// Orden obligatorio: CORS → Authentication → Authorization → Controllers
+app.UseCors("FrontendPolicy");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
